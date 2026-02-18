@@ -1,0 +1,19 @@
+name: macOS SSH
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Install SSH server
+        run: |
+          brew install openssh
+          sudo systemsetup -setremotelogin on
+          echo "root:password123" | sudo chpasswd
+          sudo launchctl load -w /System/Library/LaunchDaemons/ssh.plist
+          ifconfig | grep inet
+      - name: Keep alive
+        run: |
+          while true; do sleep 300; done
