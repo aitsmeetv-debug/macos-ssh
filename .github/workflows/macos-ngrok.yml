@@ -1,0 +1,36 @@
+name: macOS SSH with Ngrok
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Install Ngrok
+        run: |
+          brew install ngrok
+          ngrok authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
+
+      - name: Create SSH user
+        run: |
+          sudo dscl . -create /Users/runner
+          sudo dscl . -create /Users/runner UserShell /bin/bash
+          sudo dscl . -create /Users/runner RealName "Runner User"
+          sudo dscl . -create /Users/runner UniqueID 510
+          sudo dscl . -create /Users/runner PrimaryGroupID 20
+          sudo dscl . -create /Users/runner NFSHomeDirectory /Users/runner
+          sudo dscl . -passwd /Users/runner password123
+          sudo createhomedir -c -u runner
+          sudo systemsetup -setremotelogin on
+          sudo launchctl load -w /System/Library/LaunchDaemons/ssh.plist
+
+      - name: Expose SSH via Ngrok
+        run: |
+          ngrok tcp 22 --log=stdout > ngrok.log &
+          sleep 10
+          cat ngrok.log | grep -Eo "tcp://[0-9a-zA-Z.:]+" | head -n 1
+
+      - name: Keep alive
+        run: |
+          while true; do sleep 300; done
