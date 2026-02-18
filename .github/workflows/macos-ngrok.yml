@@ -12,18 +12,11 @@ jobs:
           brew install ngrok
           ngrok authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
 
-      - name: Create SSH user
+      - name: Enable SSH
         run: |
-          sudo dscl . -create /Users/runner
-          sudo dscl . -create /Users/runner UserShell /bin/bash
-          sudo dscl . -create /Users/runner RealName "Runner User"
-          sudo dscl . -create /Users/runner UniqueID 510
-          sudo dscl . -create /Users/runner PrimaryGroupID 20
-          sudo dscl . -create /Users/runner NFSHomeDirectory /Users/runner
-          sudo dscl . -passwd /Users/runner password123
-          sudo createhomedir -c -u runner
           sudo systemsetup -setremotelogin on
           sudo launchctl load -w /System/Library/LaunchDaemons/ssh.plist
+          echo "runner:password123" | sudo dscl . -passwd /Users/runner password123
 
       - name: Expose SSH via Ngrok
         run: |
@@ -34,3 +27,4 @@ jobs:
       - name: Keep alive
         run: |
           while true; do sleep 300; done
+
